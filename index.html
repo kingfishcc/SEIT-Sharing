@@ -49,20 +49,22 @@
             </div>
         );
 
+        const getCurrentTime = () => new Date().toLocaleTimeString('zh-TW', { timeZone: 'Asia/Taipei', hour: '2-digit', minute: '2-digit', hour12: false });
+
         const INITIAL_MESSAGES = [
             {
                 id: 1,
                 sender: 'bot',
                 type: 'text',
                 text: '各位老師午安！\n想先和大家簡介我 114 學年的工作狀況。',
-                time: '12:00'
+                time: getCurrentTime()
             },
             {
                 id: 2,
                 sender: 'bot',
                 type: 'overview-tables',
                 text: '114 學年學生及課程概況：',
-                time: '12:00'
+                time: getCurrentTime()
             }
         ];
 
@@ -93,7 +95,7 @@
             }, [messages, isTyping]);
 
             const generateBotResponse = (keyword) => {
-                const time = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+                const time = getCurrentTime();
                 let responses = [];
 
                 if (keyword.includes('分享')) {
@@ -425,7 +427,7 @@
                     sender: 'user',
                     type: 'text',
                     text: text,
-                    time: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+                    time: getCurrentTime()
                 };
                 
                 setMessages(prev => [...prev, userMessage]);
