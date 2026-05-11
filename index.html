@@ -1,0 +1,554 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, Menu, ChevronLeft, BookOpen, Users, Frown, Link as LinkIcon, X, Flag, Heart } from 'lucide-react';
+
+const BOT_NAME = "品蓁";
+
+const BotAvatar = () => (
+  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full mr-2 md:mr-3 mt-1 flex-shrink-0 shadow-sm bg-[#FFD1DC] flex items-center justify-center text-xl md:text-2xl select-none">
+    🦄
+  </div>
+);
+
+const INITIAL_MESSAGES = [
+  {
+    id: 1,
+    sender: 'bot',
+    type: 'text',
+    text: '各位老師午安！\n想先和大家簡介我 114 學年的工作狀況。',
+    time: '12:00'
+  },
+  {
+    id: 2,
+    sender: 'bot',
+    type: 'overview-tables',
+    text: '114 學年學生及課程概況：',
+    time: '12:00'
+  }
+];
+
+export default function App() {
+  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const [inputValue, setInputValue] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [showRichMenu, setShowRichMenu] = useState(false);
+  const [fontSizeLevel, setFontSizeLevel] = useState(2); 
+  const [zoomedImage, setZoomedImage] = useState(null); 
+  const messagesEndRef = useRef(null);
+
+  const fontConfig = [
+    { msg: 'text-[12px] md:text-sm', menu: 'text-[10px] md:text-xs' },
+    { msg: 'text-[14px] md:text-base', menu: 'text-xs md:text-sm' },
+    { msg: 'text-[16px] md:text-lg', menu: 'text-sm md:text-base' },
+    { msg: 'text-[18px] md:text-xl', menu: 'text-base md:text-lg' },
+    { msg: 'text-[20px] md:text-2xl', menu: 'text-lg md:text-xl' },
+    { msg: 'text-[24px] md:text-3xl', menu: 'text-xl md:text-2xl' },
+    { msg: 'text-[28px] md:text-4xl', menu: 'text-2xl md:text-3xl' }
+  ];
+
+  const increaseFontSize = () => setFontSizeLevel((prev) => Math.min(prev + 1, fontConfig.length - 1));
+  const decreaseFontSize = () => setFontSizeLevel((prev) => Math.max(prev - 1, 0));
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isTyping]);
+
+  const generateBotResponse = (keyword) => {
+    const time = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+    let responses = [];
+
+    if (keyword.includes('分享')) {
+      responses = [
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          type: 'text',
+          text: '我今天想和大家分享 3 點（第 4 點就結尾啦）：\n\n1. 【教材調整】：在玉東和瑞穗的課程中我做了哪些調整？利用哪些教材？\n2. 【入班支援】：玉東的資訊課和國文課，我提供哪些間接服務？\n3. 【好難喔】：我遇到的困難 >"<\n4. 【結尾】\n\n請輸入關鍵字或打開選單點選欲瞭解的主題。',
+          time
+        }
+      ];
+    } else if (keyword.includes('教材調整')) {
+      responses = [
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          type: 'text',
+          text: '請輸入【玉東】或【瑞穗】以瞭解不同學校的教材調整內容。',
+          time
+        }
+      ];
+    } else if (keyword.includes('玉東')) {
+      responses = [
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          type: 'rich-text',
+          content: (
+            <div className="flex flex-col gap-[0.8em] leading-relaxed">
+              <div className="font-bold border-b border-gray-100 pb-1">〡教學設計與教材調整</div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">●</span>
+                <span>玉東：８年級智能障礙一位，<strong className="text-red-600 font-bold">數學</strong>全抽，一週 4 節一對一</span>
+              </div>
+              <div className="flex flex-col gap-[0.4em]">
+                <div className="flex items-start">
+                  <span className="shrink-0 mr-[0.3em]">△</span>
+                  <span>個案<strong className="text-red-600 font-bold">數學</strong>能力現況：</span>
+                </div>
+                <div className="flex flex-col ml-[1.5em] gap-[0.4em]">
+                  <div className="flex items-start"><span className="shrink-0 mr-[0.4em]">➕</span><span>加法尚算熟練，若不配合手指數算就容易算錯</span></div>
+                  <div className="flex items-start"><span className="shrink-0 mr-[0.4em]">➖</span><span>借位減法需要持續練習</span></div>
+                  <div className="flex items-start"><span className="shrink-0 mr-[0.4em]">✖️</span><span>九九乘法不熟練，二位數乘二位數以上直式乘法需持續練習</span></div>
+                  <div className="flex items-start"><span className="shrink-0 mr-[0.4em]">➗</span><span>直式除法這學期剛學，橫式除法會提供乘法表參考</span></div>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span className="flex flex-col gap-[0.2em]">
+                  <span>８年級<strong className="text-red-600 font-bold">數學</strong>分ＡＢ組，個案分在Ｂ組。</span>
+                  <span>原班使用繼文老師Ｂ版講義，並每節依據進度搭配原班老師自己出的練習卷（出場卷）；</span>
+                  <span>個案在巡迴班也用出場卷檢視學習成效（由原班老師批改，原班老師也會更清楚個案能力值）。</span>
+                </span>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span>平時除了互動式網頁練習，平時和評量時也提供個案乘法表、完全平方表、公式表對照，個案目前能使用特教老師調整過的原班試卷進行考試。</span>
+              </div>
+              <a href="https://drive.google.com/drive/u/0/folders/1Z5JEmlToaYZsplj_HdELdXfx8932c20N" target="_blank" rel="noopener noreferrer" className="mt-2 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 p-2 md:p-3 rounded-lg md:rounded-xl text-sm md:text-base font-bold hover:bg-blue-100 transition-colors w-fit">
+                <LinkIcon className="w-4 h-4 md:w-5 md:h-5" />開啟雲端連結
+              </a>
+              <div className="mt-3 text-black text-[0.95em]">請輸入【抽背】瞭解不同課程。</div>
+            </div>
+          ),
+          time
+        }
+      ];
+    } else if (keyword.includes('抽背')) {
+      responses = [
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          type: 'rich-text',
+          content: (
+            <div className="flex flex-col gap-[0.8em] leading-relaxed">
+              <div className="font-bold border-b border-gray-100 pb-1">〡教學設計與教材調整</div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">●</span>
+                <span>玉東：每週四早上進行晨間抽背，單／雙週抽背英語／國文</span>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span>和科任老師與導師協調８、９年級個案抽背內容（減量或用唸的）。</span>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span>原本是特教老師將錄音檔放到個案的雲端，讓個案可以利用載具自行練習。但上學期開始特教老師利用 Gemini 生成<a href="https://kingfishcc.github.io/RecitoPracticeHub/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 transition-colors">抽背練習網站</a>，功能更齊全；這學期則是教個案生成自己的練習網站。</span>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span>個案透過練習能和同儕抽背相同範圍的國文內容，也能利用網頁更好地練習英語發音。</span>
+              </div>
+              <div className="mt-3 text-black text-[0.95em]">請輸入【玉東】或【瑞穗】以瞭解不同學校的教材調整內容。</div>
+            </div>
+          ),
+          time
+        },
+        {
+          id: Date.now() + 2,
+          sender: 'bot',
+          type: 'image',
+          text: '抽背練習網站參考👇',
+          mediaUrl: 'https://cdn.phototourl.com/free/2026-05-11-5155413b-dcd9-486c-bb16-5f97b0abec0e.png', 
+          time
+        }
+      ];
+    } else if (keyword.includes('瑞穗')) {
+      responses = [
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          type: 'rich-text',
+          content: (
+            <div className="flex flex-col gap-[0.8em] leading-relaxed">
+              <div className="font-bold border-b border-gray-100 pb-1">〡教學設計與教材調整</div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">●</span>
+                <span>瑞穗：７年級分兩組，一週抽離 3 節<strong className="text-red-600 font-bold">數學</strong></span>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span className="flex flex-col gap-[0.2em]">
+                  <span>701：識字型學習障礙兩位。</span>
+                  <span>702、703：識字型學習障礙兩位、智能障礙兩位。</span>
+                </span>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span><strong className="text-red-600 font-bold">數學</strong>能力現況：正整數四則運算尚算熟練，加入負數後於平時和考試時提供運算規則提示卡。學習抽象概念時利用桌遊、互動式網頁以及逐漸褪除視覺提示的方式練習題目。</span>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <div className="flex items-start">
+                  <span className="shrink-0">自編教材來源：</span>
+                  <div className="flex flex-col gap-[0.2em]">
+                    <span>繼文老師Ｂ版講義</span>
+                    <span>翰林版基礎 Go Easy 卷、隨堂同步卷、前哨評量、好試 All in</span>
+                    <span>康軒版數學好好玩學習單</span>
+                    <span>米克師數題簡化學習單、米克師數題視覺化版學習單</span>
+                  </div>
+                </div>
+              </div>
+              <a href="https://drive.google.com/drive/u/0/folders/1E9B31aLv7WU4CvWvhVcvAQAy46hNnvfY" target="_blank" rel="noopener noreferrer" className="mt-2 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 p-2 md:p-3 rounded-lg md:rounded-xl text-sm md:text-base font-bold hover:bg-blue-100 transition-colors w-fit">
+                <LinkIcon className="w-4 h-4 md:w-5 md:h-5" />開啟雲端連結
+              </a>
+              <div className="mt-3 text-black text-[0.95em]">請打開選單點選欲瞭解的其它主題。</div>
+            </div>
+          ),
+          time
+        }
+      ];
+    } else if (keyword.includes('入班支援')) {
+      responses = [
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          type: 'rich-text',
+          content: (
+            <div className="flex flex-col gap-[0.8em] leading-relaxed">
+              <div className="font-bold border-b border-gray-100 pb-1">〡入班支援與間接服務</div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">●</span>
+                <span>玉東：<strong className="text-red-600 font-bold">資訊科技</strong>課練習打字，一次 10 分鐘</span>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span>科任老師反應：前述８年級個案因為不熟悉注音符號及聲調，會一直詢問老師該如何打出正確的字，同時輸入生字及訓練鍵盤指法對個案來說相對困難，成效不佳，讓個案學習動機直線降低，時常不耐煩。</span>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span>特教老師利用 Gemini 生成<a href="https://kingfishcc.github.io/TypeAce/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-bold hover:text-blue-800 transition-colors">打字練習網站</a>，練習時間縮短為 1 分鐘、3 分鐘、5分鐘、10 分鐘，中文（注音）模式字體放大，加上段位及戰績、排行榜紀錄，不只個案能練習，也能和全班同學一起競爭。</span>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span>後續追蹤上課狀況：科任老師指定個案練習 3 分鐘模式三次，且個案自己選擇中文（注音）模式後，詢問次數明顯降低，能較專心練習指法，也會和同學比較排行榜名次，上課氣氛變得很好。</span>
+              </div>
+              <div className="mt-3 text-black text-[0.95em]">請輸入【國文】瞭解不同課程。</div>
+            </div>
+          ),
+          time
+        },
+        {
+          id: Date.now() + 2,
+          sender: 'bot',
+          type: 'image',
+          text: '鍵盤神手QRCODE👇',
+          mediaUrl: 'https://cdn.phototourl.com/free/2026-05-11-644db2c5-ddcf-4931-940c-d02d6a84edd0.png', 
+          time
+        }
+      ];
+    } else if (keyword.includes('國文')) {
+      responses = [
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          type: 'rich-text',
+          content: (
+            <div className="flex flex-col gap-[0.8em] leading-relaxed">
+              <div className="font-bold border-b border-gray-100 pb-1">〡入班支援與間接服務</div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">●</span>
+                <div className="flex items-start">
+                  <span className="shrink-0">玉東：</span>
+                  <div className="flex flex-col gap-[0.2em]">
+                    <span>８年級<strong className="text-red-600 font-bold">國文</strong>（智能障礙一位），一週入班 4 節</span>
+                    <span>９年級<strong className="text-red-600 font-bold">國文</strong>（識字型學習障礙一位、智能障礙一位），一週入班 2 節</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span>９年級智能障礙個案長期未到校；識字型學習障礙個案能自行聽講，特教老師會協助減量抽背範圍、習作與作文書寫調整及評量內容。</span>
+              </div>
+              <div className="flex flex-col gap-[0.4em]">
+                <div className="flex items-start">
+                  <span className="shrink-0 mr-[0.3em]">△</span>
+                  <span>８年級個案<strong className="text-red-600 font-bold">國文</strong>能力現況：</span>
+                </div>
+                <div className="flex flex-col ml-[1.5em] gap-[0.4em]">
+                  <div className="flex items-start">
+                    <span className="shrink-0">聽：</span>
+                    <span>日常生活指令 OK，但課堂內容大部分聽不懂。</span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="shrink-0">說：</span>
+                    <span>能運用的詞彙較少，語句簡短。</span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="shrink-0">讀：</span>
+                    <span>識字量低，注音、聲調不熟練，難以自行閱讀、唸讀文本。</span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="shrink-0">寫：</span>
+                    <span>喜歡寫草字，但透過鼓勵和要求能寫端正。造句常依賴架構或他人示範進行仿寫，作文文句較不通順，標點符號和連接詞運用不熟練。</span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="shrink-0">理解：</span>
+                    <span>聽覺理解較佳，閱讀理解弱，需要持續練習擷取訊息的能力。</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <span className="shrink-0 mr-[0.3em]">△</span>
+                <span>特教老師除了陪練抽背，也會協助調整習作內容，評量則是擷取部分原班試卷調整題型與比例計分。</span>
+              </div>
+              <a href="https://drive.google.com/drive/u/0/folders/1XJ22I-DGdPpMZ7ErZLGzkFhtCoQNyOuG" target="_blank" rel="noopener noreferrer" className="mt-2 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 p-2 md:p-3 rounded-lg md:rounded-xl text-sm md:text-base font-bold hover:bg-blue-100 transition-colors w-fit">
+                <LinkIcon className="w-4 h-4 md:w-5 md:h-5" />開啟雲端連結
+              </a>
+              <div className="mt-3 text-black text-[0.95em]">請打開選單點選欲瞭解的其它主題。</div>
+            </div>
+          ),
+          time
+        }
+      ];
+    } else if (keyword.includes('好難喔')) {
+      responses = [
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          type: 'rich-text',
+          content: (
+            <div className="flex flex-col gap-[0.8em] leading-relaxed">
+              <div className="font-bold border-b border-gray-100 pb-1">〡好難喔</div>
+              
+              <div className="text-gray-800">
+                國文課入班時，不確定自己還可以做什麼？
+              </div>
+
+              <div className="flex flex-col gap-[0.4em]">
+                <div className="flex items-start">
+                  <span className="shrink-0 mr-[0.3em]">●</span>
+                  <span>目前狀況：</span>
+                </div>
+                <div className="ml-[1.2em] text-gray-700">
+                  會陪特殊生練習抽背、調整習作和評量，但這些算是課堂以外的協助。上課時除了指導學習較弱的學生，我比較像幫忙管秩序的老師，整節課好像沒有做什麼就下課了。
+                </div>
+              </div>
+
+              <div className="mt-3 text-red-600 font-bold text-xl md:text-2xl text-center py-3 border-y-2 border-red-100 bg-red-50/30">
+                這樣真的有關照到特殊生的需求嗎？
+              </div>
+
+              <div className="mt-2 text-black text-[0.95em] font-medium bg-gray-50 p-2 rounded-lg text-center">
+                請打開選單點選【結尾】。
+              </div>
+            </div>
+          ),
+          time
+        }
+      ];
+    } else if (keyword.includes('結尾')) {
+      responses = [
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          type: 'rich-text',
+          content: (
+            <div className="flex flex-col gap-[0.5em] leading-relaxed text-center py-6 px-2">
+              <Heart className="w-12 h-12 text-red-400 mx-auto animate-bounce mb-2" />
+              <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                感謝各位老師的聆聽！
+              </div>
+              <div className="text-sm md:text-base text-gray-500">
+                如果有任何建議或想交流的問題，
+              </div>
+              <div className="text-sm md:text-base text-gray-500">
+                歡迎隨時告訴我～～～
+              </div>
+              <div className="bg-blue-50 text-blue-600 text-[10px] md:text-xs py-2 px-4 rounded-full mt-6 mx-auto w-fit font-medium">
+                114-2 南區巡迴輔導教師督導會議 ‧ 品蓁
+              </div>
+            </div>
+          ),
+          time
+        }
+      ];
+    }
+
+    return responses;
+  };
+
+  const handleSendMessage = (text = inputValue) => {
+    if (!text.trim()) return;
+
+    const userMessage = {
+      id: Date.now(),
+      sender: 'user',
+      type: 'text',
+      text: text,
+      time: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setShowRichMenu(false); 
+    
+    const botResponses = generateBotResponse(text);
+
+    if (botResponses.length > 0) {
+      setIsTyping(true);
+      setTimeout(() => {
+        botResponses.forEach((response, index) => {
+          setTimeout(() => {
+            setMessages(prev => [...prev, response]);
+            if (index === botResponses.length - 1) {
+              setIsTyping(false);
+            }
+          }, index * 800); 
+        });
+      }, 1000);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  return (
+    <div className="w-full h-[100dvh] bg-[#8babc6] flex flex-col relative overflow-hidden" style={{ fontFamily: "'GenSenRounded TW', 'Chiron GoRound TC', sans-serif" }}>
+      <link href="https://cdn.jsdelivr.net/npm/gensen-rounded-web@1.0.1/css/gensen-rounded-tw.css" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+
+      <div className="bg-[#2e3b4e] text-white px-4 md:px-8 py-3 md:py-4 shadow-md z-10">
+        <div className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-2 md:gap-3">
+            <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 cursor-pointer flex-shrink-0" />
+            <div className="flex flex-col">
+              <span className="font-bold text-[13px] sm:text-base md:text-lg tracking-wide leading-tight">114-2 南區巡迴輔導教師督導會議 115.5.13（三）</span>
+              <span className="text-[11px] sm:text-xs md:text-sm text-gray-300 mt-0.5">分享者：玉東國中<span className="inline-block w-3"></span>李品蓁</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+            <button onClick={decreaseFontSize} disabled={fontSizeLevel === 0} className={`flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full transition-colors ${fontSizeLevel === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-700'}`}>
+              <span className="font-bold text-base md:text-lg">A-</span>
+            </button>
+            <button onClick={increaseFontSize} disabled={fontSizeLevel === fontConfig.length - 1} className={`flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full transition-colors ${fontSizeLevel === fontConfig.length - 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-700'}`}>
+              <span className="font-bold text-base md:text-lg">A+</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto scrollbar-hide flex flex-col w-full">
+        <div className="w-full p-4 md:p-6 space-y-4 md:space-y-6 pb-48 md:pb-56">
+          {messages.map((msg) => (
+            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              {msg.sender === 'bot' && <BotAvatar />}
+              <div className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} max-w-[90%] md:max-w-[85%] lg:max-w-[75%]`}>
+                {msg.sender === 'bot' && <span className="text-xs md:text-sm text-gray-700 mb-1 ml-1 font-medium">{BOT_NAME}</span>}
+                <div className={`relative px-4 py-2.5 md:px-5 md:py-3.5 shadow-sm leading-relaxed transition-all duration-300 ${fontConfig[fontSizeLevel].msg} ${msg.sender === 'user' ? 'bg-[#85e249] text-black rounded-2xl rounded-tr-sm md:rounded-3xl md:rounded-tr-md' : 'bg-white text-black rounded-2xl rounded-tl-sm md:rounded-3xl md:rounded-tl-md'} whitespace-pre-wrap`}>
+                  {msg.type === 'text' && msg.text}
+                  {msg.type === 'rich-text' && msg.content}
+                  {msg.type === 'overview-tables' && msg.text}
+                  {msg.type === 'image' && msg.mediaUrl && (
+                    <div className="mt-2 md:mt-3 rounded-xl md:rounded-2xl overflow-hidden border border-gray-200 relative group">
+                      <img src={msg.mediaUrl} alt="分享圖片" className="w-full object-cover max-h-48 md:max-h-80 hover:opacity-95 transition-opacity cursor-pointer" onDoubleClick={() => setZoomedImage(msg.mediaUrl)} />
+                      <div className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">連點兩下放大</div>
+                    </div>
+                  )}
+                  {msg.type === 'overview-tables' && (
+                    <>
+                      <div className="mt-3 flex flex-col lg:flex-row gap-4 w-full lg:items-stretch">
+                        <div className="flex-1 bg-purple-50 rounded-xl p-3 border border-purple-200 shadow-sm flex flex-col w-full min-w-0">
+                          <div className="font-bold text-center border-b border-purple-200 pb-2 text-purple-900 text-[1.1em] flex-none">編制玉東（兼特教承辦人）</div>
+                          <div className="text-[0.85em] text-gray-600 pt-3 pb-1 lg:pt-3 lg:pb-1 leading-snug text-center flex flex-col justify-center gap-0.5 lg:h-24 flex-none">
+                            <span>一週 6 節國文 （入班）</span><span>4 節數學 （抽離）</span><span>1 節特殊需求 （外加）</span><span>1 節鑑定諮詢</span>
+                          </div>
+                          <div className="w-full overflow-x-auto scrollbar-hide mt-1 rounded-lg outline outline-1 outline-purple-200 lg:flex-1 flex flex-col">
+                            <table className="w-full text-center border-collapse bg-white lg:h-full h-auto">
+                              <thead className="bg-purple-100 text-[0.9em] text-purple-900">
+                                <tr><th className="py-2 px-2"></th><th className="py-2 px-2 border-l border-purple-200">智能障礙</th><th className="py-2 px-2 border-l border-purple-200">識字型學習障礙</th></tr>
+                              </thead>
+                              <tbody className="text-[1em] text-gray-700 divide-y divide-purple-100">
+                                <tr><td className="py-2 px-2 font-medium bg-gray-50">７年級</td><td className="py-2 px-2 border-l border-purple-100"></td><td className="py-2 px-2 border-l border-purple-100 font-bold text-purple-700">1<span className="text-[0.7em] font-normal text-purple-500 ml-0.5">（114-2 轉學）</span></td></tr>
+                                <tr><td className="py-2 px-2 font-medium bg-gray-50">８年級</td><td className="py-2 px-2 border-l border-purple-100 font-bold text-purple-700">1</td><td className="py-2 px-2 border-l border-purple-100"></td></tr>
+                                <tr><td className="py-2 px-2 font-medium bg-gray-50">９年級</td><td className="py-2 px-2 border-l border-purple-100 font-bold text-purple-700">1</td><td className="py-2 px-2 border-l border-purple-100 font-bold text-purple-700">1</td></tr>
+                              </tbody>
+                              <tfoot className="bg-purple-50 text-[0.95em]"><tr><td colSpan={3} className="py-2 font-bold text-purple-900 border-t-2 border-purple-300">目前共 3 位</td></tr></tfoot>
+                            </table>
+                          </div>
+                        </div>
+                        <div className="flex-1 bg-green-50 rounded-xl p-3 border border-green-200 shadow-sm flex flex-col w-full min-w-0">
+                          <div className="font-bold text-center border-b border-green-200 pb-2 text-green-900 text-[1.1em] flex-none">巡迴瑞穗</div>
+                          <div className="text-[0.85em] text-gray-600 pt-3 pb-1 lg:pt-3 lg:pb-1 leading-snug text-center flex flex-col justify-center gap-0.5 lg:h-24 flex-none"><span>一週 6 節數學 （抽離）</span></div>
+                          <div className="w-full overflow-x-auto scrollbar-hide mt-1 rounded-lg outline outline-1 outline-green-200 lg:flex-1 flex flex-col">
+                            <table className="w-full text-center border-collapse bg-white lg:h-full h-auto">
+                              <thead className="bg-green-100 text-[0.9em] text-green-900">
+                                <tr><th className="py-2 px-2"></th><th className="py-2 px-2 border-l border-green-200">智能障礙</th><th className="py-2 px-2 border-l border-green-200">識字型學習障礙</th></tr>
+                              </thead>
+                              <tbody className="text-[1em] text-gray-700">
+                                <tr><td className="py-2 px-2 font-medium bg-gray-50">７年級</td><td className="py-2 px-2 border-l border-green-100 font-bold text-green-700 text-[1.2em]">2</td><td className="py-2 px-2 border-l border-green-100 font-bold text-green-700 text-[1.2em]">4</td></tr>
+                              </tbody>
+                              <tfoot className="bg-green-50 text-[0.95em]"><tr><td colSpan={3} className="py-2 font-bold text-green-900 border-t-2 border-green-300">目前共 6 位</td></tr></tfoot>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-4 text-black text-[0.95em]">請輸入【分享】繼續。</div>
+                    </>
+                  )}
+                </div>
+                <span className="text-[10px] md:text-xs text-gray-600 mt-1 mx-1">{msg.time}</span>
+              </div>
+            </div>
+          ))}
+          {isTyping && (
+            <div className="flex justify-start"><BotAvatar /><div className="bg-white px-4 py-3 md:px-5 md:py-4 rounded-2xl rounded-tl-sm md:rounded-3xl md:rounded-tl-md shadow-sm flex items-center gap-1.5 md:gap-2"><div className="w-2 h-2 md:w-2.5 md:h-2.5 bg-gray-400 rounded-full animate-bounce"></div><div className="w-2 h-2 md:w-2.5 md:h-2.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div><div className="w-2 h-2 md:w-2.5 md:h-2.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div></div></div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      <div className="absolute bottom-0 w-full bg-gray-100 border-t border-gray-300 flex flex-col shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+        {showRichMenu && (
+          <div className="w-full bg-gray-50 border-b border-gray-200">
+            <div className="w-full grid grid-cols-2 md:grid-cols-4 p-2 md:p-4 gap-2 md:gap-3">
+              <button onClick={() => handleSendMessage('教材調整')} className="bg-white border-2 border-[#85e249] rounded-xl p-2 md:p-3 flex flex-col items-center justify-center gap-1 shadow-sm hover:bg-green-50 transition-colors active:scale-[0.98]">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-0.5"><BookOpen className="w-4 h-4 md:w-5 md:h-5" /></div>
+                <span className={`font-bold text-gray-700 text-center leading-tight ${fontConfig[fontSizeLevel].menu}`}>1. 教材調整</span>
+              </button>
+              <button onClick={() => handleSendMessage('入班支援')} className="bg-white border-2 border-blue-400 rounded-xl p-2 md:p-3 flex flex-col items-center justify-center gap-1 shadow-sm hover:bg-blue-50 transition-colors active:scale-[0.98]">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-0.5"><Users className="w-4 h-4 md:w-5 md:h-5" /></div>
+                <span className={`font-bold text-gray-700 text-center leading-tight ${fontConfig[fontSizeLevel].menu}`}>2. 入班支援</span>
+              </button>
+              <button onClick={() => handleSendMessage('好難喔')} className="bg-white border-2 border-orange-400 rounded-xl p-2 md:p-3 flex flex-col items-center justify-center gap-1 shadow-sm hover:bg-orange-50 transition-colors active:scale-[0.98]">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 mb-0.5"><Frown className="w-4 h-4 md:w-5 md:h-5" /></div>
+                <span className={`font-bold text-gray-700 text-center leading-tight ${fontConfig[fontSizeLevel].menu}`}>3. 好難喔</span>
+              </button>
+              <button onClick={() => handleSendMessage('結尾')} className="bg-white border-2 border-purple-400 rounded-xl p-2 md:p-3 flex flex-col items-center justify-center gap-1 shadow-sm hover:bg-purple-50 transition-colors active:scale-[0.98]">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mb-0.5"><Flag className="w-4 h-4 md:w-5 md:h-5" /></div>
+                <span className={`font-bold text-gray-700 text-center leading-tight ${fontConfig[fontSizeLevel].menu}`}>4. 結尾</span>
+              </button>
+            </div>
+          </div>
+        )}
+        <div className="w-full flex items-center gap-2 md:gap-4 px-3 md:px-4 py-2 md:py-3">
+          <button onClick={() => setShowRichMenu(!showRichMenu)} className="p-1.5 md:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors"><Menu className="w-6 h-6 md:w-7 md:h-7" /></button>
+          <div className="flex-1 bg-white rounded-full flex items-center px-4 md:px-6 py-1.5 md:py-2 shadow-inner border border-gray-200">
+            <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown} placeholder="請輸入關鍵字……" className="flex-1 bg-transparent outline-none text-[15px] md:text-lg py-1" />
+          </div>
+          <button onClick={() => handleSendMessage()} disabled={!inputValue.trim()} className={`p-1.5 md:p-2 rounded-full ${inputValue.trim() ? 'text-[#1d4ed8] hover:bg-blue-100' : 'text-gray-400'} transition-colors`}><Send className="w-6 h-6 md:w-7 md:h-7" /></button>
+        </div>
+        <div className="h-4 md:h-0 w-full bg-gray-100"></div>
+      </div>
+
+      {zoomedImage && (
+        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center animate-in fade-in duration-200 overflow-hidden" onClick={() => setZoomedImage(null)}>
+          <button onClick={() => setZoomedImage(null)} className="fixed top-4 right-4 md:top-6 md:right-6 text-white/80 hover:text-white bg-black/50 hover:bg-black/80 rounded-full p-2 md:p-3 transition-all z-10"><X className="w-6 h-6 md:w-8 md:h-8" /></button>
+          <img src={zoomedImage} alt="放大圖片" className="w-[100vw] h-[100vh] max-w-[100vw] max-h-[100vh] object-contain shadow-2xl rounded-md cursor-zoom-out scale-[0.97] transition-transform duration-300" onClick={(e) => e.stopPropagation()} onDoubleClick={() => setZoomedImage(null)} />
+        </div>
+      )}
+    </div>
+  );
+}
